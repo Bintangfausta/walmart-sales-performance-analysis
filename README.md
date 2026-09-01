@@ -2,15 +2,15 @@
 
 ## 1. Executive Summary
 
-This project analyzes transactional sales data across multiple Walmart branches to uncover the operational and revenue drivers behind branch-level performance. The analysis moves beyond simple reporting to answer a core business question: **which branches, categories, and customer behaviors are driving — or dragging — revenue, and what should management do about it?**
+Proyek ini menganalisis data transaksi penjualan di berbagai cabang Walmart untuk mengungkap faktor operasional dan pendorong revenue di balik performa masing-masing cabang. Analisis ini tidak berhenti pada pelaporan sederhana, melainkan menjawab pertanyaan bisnis inti: **cabang, kategori, dan perilaku pelanggan mana yang mendorong — atau justru menghambat — revenue, dan apa yang harus dilakukan manajemen terhadap hal tersebut?**
 
 ### Business Goals & Objectives
 
-- Identify which product categories and branches consistently deliver the highest customer satisfaction and profitability.
-- Understand customer payment preferences to inform point-of-sale and partnership strategy.
-- Detect operational peak periods (day of week, time of day) to optimize staffing and inventory allocation.
-- Quantify Year-over-Year (2022 vs. 2023) revenue performance at the branch level to flag underperforming locations for management intervention.
-- Translate raw transactional data into a decision-ready set of insights and strategic recommendations for retail leadership.
+- Mengidentifikasi kategori produk dan cabang mana yang secara konsisten memberikan customer satisfaction dan profitability tertinggi.
+- Memahami preferensi metode pembayaran pelanggan untuk menginformasikan strategi point-of-sale dan kemitraan.
+- Mendeteksi periode puncak operasional (hari dalam seminggu, waktu dalam sehari) untuk mengoptimalkan staffing dan alokasi inventory.
+- Mengkuantifikasi performa revenue Year-over-Year (2022 vs. 2023) di level cabang untuk menandai lokasi yang underperform agar bisa ditindaklanjuti manajemen.
+- Menerjemahkan data transaksi mentah menjadi insight dan rekomendasi strategis yang siap dipakai untuk pengambilan keputusan oleh retail leadership.
 
 ---
 
@@ -28,66 +28,79 @@ This project analyzes transactional sales data across multiple Walmart branches 
 
 ## 3. Business Problems Addressed
 
-The analysis was structured around the following business questions:
+Analisis ini disusun berdasarkan pertanyaan-pertanyaan bisnis berikut:
 
-1. What are the most-used payment methods, and how many transactions and units sold does each represent?
-2. Which product category earns the highest average customer rating in each branch?
-3. Which day of the week is the busiest (by transaction volume) for each branch?
-4. What is the total quantity of items sold, broken down by payment method?
-5. What are the average, minimum, and maximum product ratings by city and category?
-6. Which product category generates the highest total profit (unit price × quantity × profit margin)?
-7. What is the most preferred payment method in each individual branch?
-8. How do sales volumes shift across Morning, Afternoon, and Evening shifts?
-9. Which branches show the sharpest revenue decline from 2022 to 2023, and by how much?
+1. Apa metode pembayaran yang paling banyak digunakan, dan berapa jumlah transaksi serta unit terjual untuk masing-masing metode pembayaran?
+2. Kategori produk mana yang memperoleh rating rata-rata pelanggan tertinggi di setiap cabang?
+3. Hari apa dalam seminggu yang paling sibuk (berdasarkan volume transaksi) untuk setiap cabang?
+4. Berapa total kuantitas barang yang terjual, dipecah berdasarkan metode pembayaran?
+5. Berapa rating produk rata-rata, minimum, dan maksimum berdasarkan kota dan kategori?
+6. Kategori produk mana yang menghasilkan total profit tertinggi (unit price × quantity × profit margin)?
+7. Apa metode pembayaran yang paling disukai di masing-masing cabang?
+8. Bagaimana volume penjualan berubah across shift Morning, Afternoon, dan Evening?
+9. Cabang mana yang menunjukkan penurunan revenue paling tinggi dari 2022 ke 2023, dan berapa besar penurunannya?
 
 ---
 
 ## 4. Data Pipeline & Methodology
 
-The project follows a standard **ETL → Analysis** workflow, split across two stages:
+Proyek ini mengikuti alur kerja standar **ETL → Analysis**, terbagi menjadi dua tahap:
 
 **Stage 1 — Data Cleaning & Integration (Python / Pandas)**
-- Ingested the raw dataset (**10,051 rows × 11 columns**) from `Walmart.csv`.
-- Performed data quality checks using `.info()`, `.describe()`, and `.isnull().sum()` to profile data types, missing values, and statistical outliers.
-- Removed exact duplicate transactions using `drop_duplicates()`.
-- Dropped incomplete records containing missing values (`dropna()`), reducing the dataset to **9,969 clean rows**.
-- Cleaned the `unit_price` field by stripping currency symbols (`$`) and casting it to a numeric (float) type for calculation.
-- Standardized column naming conventions to lowercase for consistency with SQL querying.
-- Engineered a new `total` column (`unit_price × quantity`) to represent transaction-level revenue.
-- Exported the cleaned dataset to `walmart_clean_data.csv` and loaded it into a PostgreSQL database (`walmart` table) via `SQLAlchemy`, with a row-count validation query to confirm a successful, lossless load.
+- Mengimpor dataset mentah (**10.051 baris × 11 kolom**) dari `Walmart.csv`.
+- Melakukan pengecekan kualitas data menggunakan `.info()`, `.describe()`, dan `.isnull().sum()` untuk memprofilkan tipe data, missing values, dan outlier statistik.
+- Menghapus transaksi duplikat persis menggunakan `drop_duplicates()`.
+- Membuang record tidak lengkap yang mengandung missing values (`dropna()`), sehingga dataset berkurang menjadi **9.969 baris bersih**.
+- Membersihkan kolom `unit_price` dengan menghilangkan simbol mata uang (`$`) dan mengubahnya menjadi tipe numerik (float) untuk keperluan perhitungan.
+- Menstandarkan penamaan kolom menjadi huruf kecil agar konsisten dengan query SQL.
+- Membuat kolom baru `total` (`unit_price × quantity`) untuk merepresentasikan revenue di level transaksi.
+- Mengekspor dataset yang sudah bersih ke `walmart_clean_data.csv` dan memuatnya ke database PostgreSQL (tabel `walmart`) melalui `SQLAlchemy`, dengan query validasi row-count untuk memastikan proses loading berhasil dan tidak ada data yang hilang.
 
 **Stage 2 — Exploratory Data Analysis & Business Querying (SQL / PostgreSQL)**
-- Queried the cleaned `walmart` table directly in PostgreSQL to answer each of the nine business problems above.
-- Applied `GROUP BY` aggregations to summarize payment methods, ratings, and quantities.
-- Used `CASE WHEN` logic to segment transactions into Morning / Afternoon / Evening shifts based on transaction timestamps.
-- Leveraged **Window Functions** (`RANK() OVER (PARTITION BY ...)`) to identify the top-ranked category, day, and payment method *per branch*, rather than globally.
-- Built **CTEs (Common Table Expressions)** to isolate 2022 and 2023 revenue by branch, then **joined** the two periods to calculate a Year-over-Year revenue decline ratio, surfacing the five branches most in need of strategic attention.
+- Melakukan query pada tabel `walmart` yang sudah bersih langsung di PostgreSQL untuk menjawab masing-masing dari sembilan business problem di atas.
+- Menerapkan agregasi `GROUP BY` untuk merangkum metode pembayaran, rating, dan kuantitas.
+- Menggunakan logika `CASE WHEN` untuk mensegmentasi transaksi ke dalam shift Morning / Afternoon / Evening berdasarkan timestamp transaksi.
+- Memanfaatkan **Window Functions** (`RANK() OVER (PARTITION BY ...)`) untuk mengidentifikasi kategori, hari, dan metode pembayaran dengan ranking tertinggi *per cabang*, bukan secara global.
+- Membangun **CTEs (Common Table Expressions)** untuk memisahkan revenue 2022 dan 2023 per cabang, lalu **join** kedua periode tersebut untuk menghitung rasio penurunan revenue Year-over-Year, sehingga memunculkan lima cabang yang paling membutuhkan perhatian strategis.
 
 ---
 
 ## 5. Key Business Insights & Recommendations
 
-> **Note:** The figures below are placeholders. Replace `[X]%` and `[Branch Name]` with the actual results generated from your query outputs before publishing.
+Query-query pada Section 3 disintesis menjadi insight berikut, masing-masing dipasangkan dengan rekomendasi konkret untuk retail leadership. Angka-angka diambil langsung dari dataset yang sudah bersih (9.969 transaksi, 100 cabang, 98 kota), yang mencatat total revenue sebesar **$1.209.726** dan total profit sebesar **$476.139**.
 
-**Insight 1 — Payment Method Concentration**
-`[Payment Method, e.g., Ewallet]` accounts for `[X]%` of all transactions and `[X]` units sold, making it the dominant checkout channel.
-**Recommendation:** Prioritize this channel in loyalty and cashback promotions, and ensure infrastructure (uptime, transaction speed) is prioritized for this payment rail during peak hours.
+**Insight 1 — Dua Kategori Menyumbang ~81% dari Total Profit, Terlepas dari Margin**
+- `Fashion Accessories` ($192.315) dan `Home and Lifestyle` ($192.214) bersama-sama menghasilkan sekitar 81% dari total profit, sementara empat kategori lainnya masing-masing hanya menyumbang $18K–$31K.
+- Rata-rata profit margin hampir seragam di keenam kategori (0,38–0,40), yang berarti gap ini sepenuhnya didorong oleh sales volume, bukan oleh harga atau efisiensi margin.
+- **Rekomendasi:** Prioritaskan kedalaman inventory, penempatan rak, dan budget promosi ke `Fashion Accessories` dan `Home and Lifestyle`. Untuk kategori dengan volume lebih rendah, fokus pada taktik pendorong volume (bundling, cross-selling) alih-alih penyesuaian margin, karena margin bukan faktor pembatas di sini.
 
-**Insight 2 — Category Performance Varies Sharply by Branch**
-The top-rated category is not uniform across branches — `[Branch Name]` rates `[Category Name]` highest at `[X.X]` average, while other branches favor different categories.
-**Recommendation:** Move away from a one-size-fits-all merchandising strategy; tailor category placement and promotional focus per branch based on local customer preference.
+**Insight 2 — Preferensi Metode Pembayaran per Cabang Berbeda dari Rata-rata Network**
+- Di level network, `Credit Card` memimpin dari sisi total transaksi (4.256), diikuti `Ewallet` (3.881) dan `Cash` (1.832).
+- Namun jika diukur per cabang, `Ewallet` menjadi metode pembayaran teratas di 75 dari 100 cabang, dibandingkan `Credit Card` di 23 cabang dan `Cash` hanya di 2 cabang.
+- **Rekomendasi:** Adopsi `Ewallet` bersifat luas di seluruh jaringan cabang, bukan terkonsentrasi di beberapa lokasi saja, sehingga menjadikannya investasi dengan leverage tertinggi untuk strategi POS (uptime, kecepatan checkout, promosi cashback). Penggunaan `Cash` kemungkinan bisa mulai dikurangi mengingat porsinya yang konsisten rendah.
 
-**Insight 3 — Predictable Weekly Traffic Patterns**
-`[Day of Week]` is consistently the busiest day across the majority of branches, with transaction counts peaking at `[X]` transactions.
-**Recommendation:** Align staff scheduling and inventory replenishment cycles to front-load resources ahead of this peak day, reducing checkout wait times and stockouts.
+**Insight 3 — Customer Satisfaction Tergolong Moderat Secara Keseluruhan, dengan Variasi Regional yang Lebar**
+- Rata-rata rating produk di seluruh transaksi adalah 5,83 / 10.
+- Rata-rata rating di level kota berkisar dari ~5,0 (Rowlett, Texas City, Sherman) hingga ~7,0 (Austin, Huntsville, Pflugerville) — selisih sekitar dua poin penuh antara pasar terlemah dan terkuat.
+- **Rekomendasi:** Lakukan audit kualitas layanan di kota-kota dengan rating terendah, dengan fokus pada ketersediaan stok, kecepatan checkout, dan kondisi toko. Jadikan cabang dengan performa terbaik seperti Austin sebagai benchmark internal untuk best practice.
 
-**Insight 4 — Profitability Is Not Evenly Distributed Across Categories**
-The `[Category Name]` category generates the highest total profit at `[$X]`, despite not necessarily having the highest sales volume.
-**Recommendation:** Shift marketing spend and shelf space toward high-margin categories rather than optimizing purely for unit volume.
+**Insight 4 — Kategori dengan Profit Tertinggi Justru Paling Jarang Menjadi yang Top-Rated**
+- `Food and Beverages` dan `Sports and Travel` sama-sama menjadi kategori yang paling sering top-rated di berbagai cabang (masing-masing 26 cabang), diikuti oleh `Health and Beauty` (25) dan `Electronic Accessories` (19).
+- Sebaliknya, `Fashion Accessories` dan `Home and Lifestyle` — dua kontributor profit terbesar dari Insight 1 — hanya menempati peringkat #1 rating di masing-masing 3 dan 2 cabang.
+- **Rekomendasi:** Tandai hal ini ke leadership sebagai risiko churn: kategori yang menghasilkan profit terbesar bukanlah kategori yang paling memuaskan pelanggan. Review kualitas produk dan customer experience yang ditargetkan di kedua kategori ini bisa melindungi porsi total profit yang signifikan.
 
-**Insight 5 — Significant Year-over-Year Revenue Decline at Specific Branches**
-Five branches — led by `[Branch Name]` — recorded a revenue decline of up to `[X]%` from 2022 to 2023.
-**Recommendation:** Conduct a root-cause audit (local competition, staffing, stock availability, or regional demand shifts) at these five branches, and consider a targeted revenue-recovery plan, such as localized promotions or operational review.
+**Insight 5 — Aktivitas Penjualan Terkonsentrasi di Siang Hari, Pagi Hari Kurang Termanfaatkan**
+- Volume transaksi per shift: Afternoon 46% (4.636 invoice), Evening 33% (3.246), Morning hanya 21% (2.087).
+- **Rekomendasi:** Selaraskan level staffing dengan kurva permintaan ini, dengan mengonsentrasikan jumlah staf di shift Afternoon dan Evening. Perkenalkan promosi "morning deal" yang dibatasi waktu untuk mendistribusikan ulang traffic dan meningkatkan throughput toko di jam pagi yang lebih sepi.
+
+**Insight 6 — Hari Tengah Minggu, Bukan Akhir Pekan, Menjadi Puncak yang Paling Umum**
+- Thursday paling sering menjadi hari tersibuk di berbagai cabang (23 cabang), diikuti Tuesday dan Wednesday (21 masing-masing); Friday adalah hari yang paling jarang menjadi puncak suatu cabang (hanya 8 cabang).
+- **Rekomendasi:** Bobotkan jadwal staffing dan replenishment inventory ke arah window Tuesday–Thursday, alih-alih default ke asumsi akhir pekan yang ramai. Validasi pola ini secara regional, karena kemungkinan mencerminkan siklus payday lokal atau kebiasaan belanja setempat.
+
+**Insight 7 — Pertumbuhan Agregat Menutupi Penurunan Tajam di Sejumlah Kecil Cabang**
+- Revenue network-wide tumbuh dari $217.405 (2022) menjadi $232.260 (2023), kenaikan 6,8%, yang sekilas menunjukkan stabilitas secara keseluruhan.
+- Namun, lima cabang mencatat penurunan year-over-year yang tajam: WALM045 (-62,6%), WALM047 (-58,6%), WALM098 (-57,9%), WALM033 (-55,6%), dan WALM081 (-50,7%).
+- **Rekomendasi:** KPI di level agregat tidak boleh menjadi satu-satunya dasar evaluasi performa, karena bisa menutupi masalah lokal. Kelima cabang ini memerlukan investigasi root-cause segera — kemungkinan penyebabnya termasuk kompetitor lokal baru, gangguan inventory atau staffing, atau perubahan pada basis pelanggan di sekitar toko.
 
 ---
 
@@ -101,9 +114,9 @@ walmart-sales-performance-analysis/
 │   ├── Walmart.csv                    # Raw source dataset (10,051 rows)
 │   └── walmart_clean_data.csv         # Cleaned dataset after Python processing (9,969 rows)
 │
-├── walmart_data_cleaning.ipynb    # Data cleaning, feature engineering & PostgreSQL loading (Python/Pandas)
+├── walmart_data_cleaning.ipynb        # Data cleaning, feature engineering & PostgreSQL loading (Python/Pandas)
 │
-├── eda_business_questions.sql     # Exploratory data analysis & 9 business problem queries (PostgreSQL)
+├── eda_business_questions.sql         # Exploratory data analysis & 9 business problem queries (PostgreSQL)
 │
 └── assets/                            # (Optional) Charts, dashboard screenshots, or exported visuals
 ```
@@ -111,4 +124,4 @@ walmart-sales-performance-analysis/
 ---
 
 ### Author's Note
-This project demonstrates an end-to-end analytics workflow — from raw, messy transactional data to a clean relational database, through to SQL-driven business intelligence — reflecting the type of analysis a retail data analyst would deliver to support branch-level decision-making.
+Proyek ini mendemonstrasikan end-to-end analytics workflow — mulai dari data transaksi mentah yang berantakan hingga menjadi relational database yang bersih, dilanjutkan dengan business intelligence berbasis SQL — mencerminkan jenis analisis yang akan disampaikan seorang retail data analyst untuk mendukung pengambilan keputusan di level cabang.
