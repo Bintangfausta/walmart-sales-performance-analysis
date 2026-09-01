@@ -101,11 +101,9 @@ walmart-sales-performance-analysis/
 │   ├── Walmart.csv                    # Raw source dataset (10,051 rows)
 │   └── walmart_clean_data.csv         # Cleaned dataset after Python processing (9,969 rows)
 │
-├── notebooks/
-│   └── walmart_data_cleaning.ipynb    # Data cleaning, feature engineering & PostgreSQL loading (Python/Pandas)
+├── walmart_data_cleaning.ipynb    # Data cleaning, feature engineering & PostgreSQL loading (Python/Pandas)
 │
-├── sql/
-│   └── EDA & Business Problem.sql     # Exploratory data analysis & 9 business problem queries (PostgreSQL)
+├── eda_business_questions.sql     # Exploratory data analysis & 9 business problem queries (PostgreSQL)
 │
 └── assets/                            # (Optional) Charts, dashboard screenshots, or exported visuals
 ```
