@@ -1,5 +1,5 @@
 # Walmart Retail Branch Performance and Sales Trend Analysis, 2022–2023
-
+![alt text](https://github.com/Bintangfausta/walmart-sales-performance-analysis/blob/main/IMG1.jpg?raw=true)
 ## 1. Executive Summary
 
 Proyek ini menganalisis data transaksi penjualan di berbagai cabang Walmart untuk mengungkap faktor operasional dan pendorong revenue di balik performa masing-masing cabang. Analisis ini tidak berhenti pada pelaporan sederhana, melainkan menjawab pertanyaan bisnis inti: **cabang, kategori, dan perilaku pelanggan mana yang mendorong — atau justru menghambat — revenue, dan apa yang harus dilakukan manajemen terhadap hal tersebut?**
